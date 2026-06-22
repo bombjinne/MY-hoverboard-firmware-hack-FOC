@@ -273,8 +273,11 @@ int main(void) {
       }
       button1_prev = button1_now;
 
-      // PB11 (BUTTON2) forward/reverse via self-locking switch (closed = GND = reverse)
-      backwardDrive = !HAL_GPIO_ReadPin(BUTTON2_PORT, BUTTON2_PIN);
+      // PB11 (BUTTON2) forward/reverse via self-locking switch, only effective at standstill
+      uint8_t backwardDrive_raw = !HAL_GPIO_ReadPin(BUTTON2_PORT, BUTTON2_PIN);
+      if (speedAvgAbs < 20) {
+        backwardDrive = backwardDrive_raw;
+      }
     }
     #endif
 
@@ -380,6 +383,10 @@ int main(void) {
           speed = steer + speed;
         } else {                                // Reverse: PB11 closed to GND (LOW)
           speed = steer - speed;
+          // Reverse limited to M1 (slowest) speed and current
+          if (speed < -MULTI_MODE_DRIVE_M1_MAX) speed = -MULTI_MODE_DRIVE_M1_MAX;
+          rtP_Left.n_max = rtP_Right.n_max = MULTI_MODE_M1_N_MOT_MAX << 4;
+          rtP_Left.i_max = rtP_Right.i_max = (MULTI_MODE_M1_I_MOT_MAX * A2BIT_CONV) << 4;
         }
         #else
         if (!MultipleTapBrake.b_multipleTap) {  // Forward (original logic via brake pedal double-tap)
