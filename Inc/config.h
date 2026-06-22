@@ -527,7 +527,7 @@
   #define ELECTRIC_BRAKE_ENABLE             // [-] Flag to enable electric brake and replace the motor "freewheel" with a constant braking when the input torque request is 0. Only available and makes sense for TORQUE mode. // 启用电子制动（动能回收）。松开油门时电机发电给电池充电，产生轻微阻力。
   #define ELECTRIC_BRAKE_MAX    50          // (0, 500) Maximum electric brake to be applied when input torque request is 0 (pedal fully released). 50 = gentle regen // 动能回收强度。值越大回收越强，松开油门时的阻力也越大。
   #define ELECTRIC_BRAKE_THRES  120         // (0, 500) Threshold below which the electric brake starts engaging. // 电子制动开始介入的阈值（低于此值开始介入）
-  #define BRAKE_REGEN_PERCENT   50          // (0-100) Brake pedal max regen strength in percent. 50 = max 50% regen torque when fully pressed // 刹车踏板最大动能回收百分比。50 = 刹车踩到底最多50%回收力度
+  #define BRAKE_REGEN_PERCENT   80          // (0-100) Brake pedal max regen strength in percent. 80 = strong enough to stop without mechanical brakes // 刹车踏板最大动能回收百分比。80 = 足以完全刹停（无机械刹车）
 
   #define MULTI_MODE_DRIVE                  // This option enables driving modes cycled via PB10 button (see main.c for mode switching logic) // 此选项启用通过PB10按钮循环切换驾驶模式（模式切换逻辑见main.c）
   #ifdef MULTI_MODE_DRIVE
