@@ -11,27 +11,29 @@
 | 项目 | 规格 |
 |---|---|
 | **主控芯片** | STM32F103RCT6 |
-| **电池** | 36V 锂电（10串） |
+| **电池** | 36V 锂电（10串2并） |
 | **电机** | 10寸蜘蛛轮 × 2，约 300W |
 | **控制模式** | FOC 扭矩模式（TRQ_MODE） |
 
 ---
 
 ## 接线图
+<img width="3096" height="1599" alt="mainboard_pinout" src="https://github.com/user-attachments/assets/3f01622e-a0af-42f6-81f3-c17f5204e08e" />
 
 ### 主板引脚分配
 
+
 ```
   ┌─────────────────────────────────────┐
-  │         平衡车主板                  │
+  │         平衡车主板                   │
   │  STM32F103RCT6                      │
   │                                     │
-  │  PA2 ──── 刹车踏板信号 (ADC)        │
-  │  PA3 ──── 油门踏板信号 (ADC)        │
-  │  PB10 ─── 档位切换按钮 (→GND)       │
-  │  PB11 ─── 前进/倒车自锁开关 (→GND)  │
+  │  PA2 ──── 刹车踏板信号 (ADC)         │
+  │  PA3 ──── 油门踏板信号 (ADC)         │
+  │  PB10 ─── 档位切换按钮 (→GND)        │
+  │  PB11 ─── 前进/倒车自锁开关 (→GND)   │
   │                                     │
-  │  3.3V ─── 从 AMS1117 顶部焊点取电   │
+  │  3.3V ─── 从 AMS1117 顶部焊点取电    │
   │  GND  ─── 公共地                    │
   └─────────────────────────────────────┘
 ```
@@ -190,8 +192,5 @@ pio run -t upload
 
 如果你觉得这个项目有帮助，可以请我喝杯咖啡 ☕
 
-<!--
-  把下面的链接替换为你自己的 PayPal.Me 链接
-  例如: https://paypal.me/你的ID
--->
-[![Donate](https://www.paypalobjects.com/en_US/i/btn/btn_donate_SM.gif)](https://paypal.me/你的PayPalID)
+<img width="1080" height="1327" alt="f4f1abd021209e73f794af94db1ec9db" src="https://github.com/user-attachments/assets/2c7a2516-6425-4a23-ab78-e2b9d30dcd29" />
+
