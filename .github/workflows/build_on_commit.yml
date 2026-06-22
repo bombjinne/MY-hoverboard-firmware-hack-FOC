@@ -21,7 +21,7 @@ jobs:
     # Build with make
     - name: make
       env: 
-        VARIANT: VARIANT_ADC
+        VARIANT: VARIANT_HOVERCAR
       run: make
 
     # Build with Platformio
@@ -37,5 +37,5 @@ jobs:
       with:
         path: ${{github.workspace}}/.pio/build/**
         name: ${{github.event.repository.name}}_build_${{github.run_number}}
-        retention-days: 5
+        retention-days: 100
 
