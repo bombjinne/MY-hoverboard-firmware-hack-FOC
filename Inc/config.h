@@ -531,17 +531,17 @@
 
   #define MULTI_MODE_DRIVE                  // This option enables driving modes cycled via PB10 button (see main.c for mode switching logic) // 此选项启用通过PB10按钮循环切换驾驶模式（模式切换逻辑见main.c）
   #ifdef MULTI_MODE_DRIVE
-      // MODE 1 - Slow (新手模式 - 慢速)
-      #define MULTI_MODE_DRIVE_M1_MAX   175
+      // MODE 1 - Slow (新手模式 - 慢速，≈ 8.6 km/h)
+      #define MULTI_MODE_DRIVE_M1_MAX   400
       #define MULTI_MODE_DRIVE_M1_RATE  250
-      #define MULTI_MODE_M1_I_MOT_MAX   4
-      #define MULTI_MODE_M1_N_MOT_MAX   30
+      #define MULTI_MODE_M1_I_MOT_MAX   8
+      #define MULTI_MODE_M1_N_MOT_MAX   180
 
-      // MODE 2 - Medium (中级模式 - 中速)
-      #define MULTI_MODE_DRIVE_M2_MAX   500
-      #define MULTI_MODE_DRIVE_M2_RATE  300
-      #define MULTI_MODE_M2_I_MOT_MAX   8
-      #define MULTI_MODE_M2_N_MOT_MAX   80
+      // MODE 2 - Medium (中级模式 - 中速，≈ 21.5 km/h)
+      #define MULTI_MODE_DRIVE_M2_MAX   700
+      #define MULTI_MODE_DRIVE_M2_RATE  350
+      #define MULTI_MODE_M2_I_MOT_MAX   12
+      #define MULTI_MODE_M2_N_MOT_MAX   450
 
       // MODE 3 - Fast (高级模式 - 快速)
       #define MULTI_MODE_DRIVE_M3_MAX   1000
@@ -632,7 +632,7 @@
   #define INVERT_L_DIRECTION
   // #define SUPPORT_BUTTONS_LEFT       // use left sensor board cable for button inputs.  Disable DEBUG_SERIAL_USART2! // 使用左侧传感器板线缆作为按钮输入。禁用DEBUG_SERIAL_USART2！
   // #define SUPPORT_BUTTONS_RIGHT      // use right sensor board cable for button inputs. Disable DEBUG_SERIAL_USART3! // 使用右侧传感器板线缆作为按钮输入。禁用DEBUG_SERIAL_USART3！
-  // #define STANDSTILL_HOLD_ENABLE     // [-] Flag to hold the position when standtill is reached. Only available and makes sense for VOLTAGE or TORQUE mode. // 到达停止状态时保持位置的标志。仅适用于电压或扭矩模式。
+  #define STANDSTILL_HOLD_ENABLE     // 驻车功能，到达停止状态时保持位置的标志。仅适用于电压或扭矩模式。
 
   #ifdef CONTROL_PWM_RIGHT
     #define DEBUG_SERIAL_USART2         // left sensor cable debug // 左侧传感器线缆调试
