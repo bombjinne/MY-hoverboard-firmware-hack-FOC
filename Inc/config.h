@@ -512,7 +512,7 @@
   #define PRI_INPUT1              1,  0, 0, 4095, 0    // Pedal Brake (PA2)  TYPE=1 Normal Pot, full range // 刹车踏板（PA2），类型=1普通电位器，全范围
   #define PRI_INPUT2              1,  0, 0, 4095, 0    // Pedal Accel (PA3)  TYPE=1 Normal Pot, full range // 油门踏板（PA3），类型=1普通电位器，全范围
 
-  #define DEBUG_SERIAL_USART2               // left sensor board cable debug // 左侧传感器板线缆调试
+  // #define DEBUG_SERIAL_USART2               // left sensor board cable debug // 左侧传感器板线缆调试（与ADC冲突，已禁用）
 
   #define SPEED_COEFFICIENT       16384     // 1.0f
   #define STEER_COEFFICIENT       8192      // 0.5f Only active in Sideboard input // 仅在侧板输入中激活
