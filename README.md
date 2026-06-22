@@ -192,5 +192,5 @@ pio run -t upload
 
 如果你觉得这个项目有帮助，可以请我喝杯咖啡 ☕
 
-<img width="1080" height="1327" alt="f4f1abd021209e73f794af94db1ec9db" src="https://github.com/user-attachments/assets/2c7a2516-6425-4a23-ab78-e2b9d30dcd29" />
+<img width="400" height="500" alt="f4f1abd021209e73f794af94db1ec9db" src="https://github.com/user-attachments/assets/2c7a2516-6425-4a23-ab78-e2b9d30dcd29" />
 
