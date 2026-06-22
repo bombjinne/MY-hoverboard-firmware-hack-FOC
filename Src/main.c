@@ -242,68 +242,41 @@ int main(void) {
 
     #if defined(MULTI_MODE_DRIVE) && defined(SUPPORT_BUTTONS_RIGHT)
     {
-      // PB10 single button: short press = mode cycling, long press = reverse toggle
-      static uint32_t button1_press_tick;
-      static uint8_t  button1_long_handled;
+      // PB10 (BUTTON1) short press = mode cycling
       uint8_t button1_now = !HAL_GPIO_ReadPin(BUTTON1_PORT, BUTTON1_PIN);
-
-      // Detect press start (rising edge)
       if (button1_now && !button1_prev) {
-        button1_press_tick = HAL_GetTick();
-        button1_long_handled = 0;
-      }
-
-      // Detect release (falling edge) -> short press
-      if (!button1_now && button1_prev) {
-        uint32_t press_ms = HAL_GetTick() - button1_press_tick;
-        if (press_ms < 500 && !button1_long_handled) {
-          // Short press: cycle mode
-          drive_mode = (drive_mode + 1) % 3;
-          switch (drive_mode) {
-            case 0:
-              max_speed = MULTI_MODE_DRIVE_M1_MAX;
-              rate = MULTI_MODE_DRIVE_M1_RATE;
-              rtP_Left.n_max = rtP_Right.n_max = MULTI_MODE_M1_N_MOT_MAX << 4;
-              rtP_Left.i_max = rtP_Right.i_max = (MULTI_MODE_M1_I_MOT_MAX * A2BIT_CONV) << 4;
-              beepShortMany(1, 1);
-              break;
-            case 1:
-              max_speed = MULTI_MODE_DRIVE_M2_MAX;
-              rate = MULTI_MODE_DRIVE_M2_RATE;
-              rtP_Left.n_max = rtP_Right.n_max = MULTI_MODE_M2_N_MOT_MAX << 4;
-              rtP_Left.i_max = rtP_Right.i_max = (MULTI_MODE_M2_I_MOT_MAX * A2BIT_CONV) << 4;
-              beepShortMany(2, 1);
-              break;
-            case 2:
-              max_speed = MULTI_MODE_DRIVE_M3_MAX;
-              rate = MULTI_MODE_DRIVE_M3_RATE;
-              rtP_Left.n_max = rtP_Right.n_max = MULTI_MODE_M3_N_MOT_MAX << 4;
-              rtP_Left.i_max = rtP_Right.i_max = (MULTI_MODE_M3_I_MOT_MAX * A2BIT_CONV) << 4;
-              beepShortMany(3, 1);
-              break;
-          }
-          printf("Drive mode %i selected: max_speed:%i acc_rate:%i \r\n", drive_mode, max_speed, rate);
+        drive_mode = (drive_mode + 1) % 3;
+        switch (drive_mode) {
+          case 0:
+            max_speed = MULTI_MODE_DRIVE_M1_MAX;
+            rate = MULTI_MODE_DRIVE_M1_RATE;
+            rtP_Left.n_max = rtP_Right.n_max = MULTI_MODE_M1_N_MOT_MAX << 4;
+            rtP_Left.i_max = rtP_Right.i_max = (MULTI_MODE_M1_I_MOT_MAX * A2BIT_CONV) << 4;
+            beepShortMany(1, 1);
+            break;
+          case 1:
+            max_speed = MULTI_MODE_DRIVE_M2_MAX;
+            rate = MULTI_MODE_DRIVE_M2_RATE;
+            rtP_Left.n_max = rtP_Right.n_max = MULTI_MODE_M2_N_MOT_MAX << 4;
+            rtP_Left.i_max = rtP_Right.i_max = (MULTI_MODE_M2_I_MOT_MAX * A2BIT_CONV) << 4;
+            beepShortMany(2, 1);
+            break;
+          case 2:
+            max_speed = MULTI_MODE_DRIVE_M3_MAX;
+            rate = MULTI_MODE_DRIVE_M3_RATE;
+            rtP_Left.n_max = rtP_Right.n_max = MULTI_MODE_M3_N_MOT_MAX << 4;
+            rtP_Left.i_max = rtP_Right.i_max = (MULTI_MODE_M3_I_MOT_MAX * A2BIT_CONV) << 4;
+            beepShortMany(3, 1);
+            break;
         }
+        printf("Drive mode %i selected: max_speed:%i acc_rate:%i \r\n", drive_mode, max_speed, rate);
       }
-
-      // Long press: toggle reverse (only at standstill)
-      if (button1_now && !button1_long_handled) {
-        if (HAL_GetTick() - button1_press_tick > 1000) {
-          button1_long_handled = 1;
-          if (speedAvgAbs < 20) {
-            backwardDrive = !backwardDrive;
-            if (backwardDrive) {
-              beepShortMany(2, 1);  // 2 short beeps = reverse engaged
-            } else {
-              beepShortMany(1, 1);  // 1 short beep = forward engaged
-            }
-          } else {
-            beepShortMany(4, 1);    // 4 short beeps = warning: cannot switch while moving
-          }
-        }
-      }
-
       button1_prev = button1_now;
+
+      // PB11 (BUTTON2) reverse via toggle switch, only effective at standstill
+      if (speedAvgAbs < 20) {
+        backwardDrive = !HAL_GPIO_ReadPin(BUTTON2_PORT, BUTTON2_PIN);
+      }
     }
     #endif
 
