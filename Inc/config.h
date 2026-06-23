@@ -164,10 +164,10 @@
 #define FIELD_WEAK_LO   750             // ( 500, 1000] Input target Low threshold for starting Field Weakening / Phase Advance. Do NOT set this higher than 1000. // 开始弱磁/提前角的输入目标低阈值。请勿设置高于1000
 
 // Extra functionality // 额外功能
-// #define STANDSTILL_HOLD_ENABLE          // [-] Flag to hold the position when standtill is reached. Only available and makes sense for VOLTAGE or TORQUE mode. // 到达停止状态时保持位置的标志。仅适用于电压或扭矩模式。
-// #define ELECTRIC_BRAKE_ENABLE           // [-] Flag to enable electric brake and replace the motor "freewheel" with a constant braking when the input torque request is 0. Only available and makes sense for TORQUE mode. // 启用电子制动，当输入扭矩请求为0时用恒定制动代替电机"自由滑行"。仅适用于扭矩模式。
-// #define ELECTRIC_BRAKE_MAX    100       // (0, 500) Maximum electric brake to be applied when input torque request is 0 (pedal fully released). // 输入扭矩请求为0（踏板完全松开）时施加的最大电子制动
-// #define ELECTRIC_BRAKE_THRES  120       // (0, 500) Threshold below at which the electric brake starts engaging. // 电子制动开始介入的阈值（低于此值开始制动）
+#define STANDSTILL_HOLD_ENABLE          // 到达停止状态时保持位置的标志。仅适用于电压或扭矩模式。
+#define ELECTRIC_BRAKE_ENABLE           // [-] Flag to enable electric brake and replace the motor "freewheel" with a constant braking when the input torque request is 0. Only available and makes sense for TORQUE mode. // 启用电子制动，当输入扭矩请求为0时用恒定制动代替电机"自由滑行"。仅适用于扭矩模式。
+#define ELECTRIC_BRAKE_MAX    50       // (0, 500) Maximum electric brake to be applied when input torque request is 0 (pedal fully released). // 输入扭矩请求为0（踏板完全松开）时施加的最大电子制动
+#define ELECTRIC_BRAKE_THRES  120       // (0, 500) Threshold below at which the electric brake starts engaging. // 电子制动开始介入的阈值（低于此值开始制动）
 // ########################### END OF MOTOR CONTROL (电机控制结束) ########################
 
 
@@ -179,7 +179,7 @@
 #define ADC_MARGIN                100     // ADC input margin applied on the raw ADC min and max to make sure the MIN and MAX values are reached even in the presence of noise // ADC输入裕量，应用于原始ADC最小值和最大值，确保即使在噪声存在时也能达到最小值和最大值
 #define ADC_PROTECT_TIMEOUT       100     // ADC Protection: number of wrong / missing input commands before safety state is taken // ADC保护：进入安全状态前允许的错误/丢失输入命令次数
 #define ADC_PROTECT_THRESH        200     // ADC Protection threshold below/above the MIN/MAX ADC values // ADC保护阈值，低于/高于ADC最小/最大值
-#define AUTO_CALIBRATION_ENA              // Enable/Disable input auto-calibration by holding power button pressed. Un-comment this if auto-calibration is not needed. // 启用/禁用通过按住电源按钮进行输入自动校准。如果不需要自动校准则取消注释此项。
+// #define AUTO_CALIBRATION_ENA              // Enable/Disable input auto-calibration by holding power button pressed. Un-comment this if auto-calibration is not needed. // 启用/禁用通过按住电源按钮进行输入自动校准。如果不需要自动校准则取消注释此项。
 
 /* FILTER is in fixdt(0,16,16): VAL_fixedPoint = VAL_floatingPoint * 2^16. In this case 6553 = 0.1 * 2^16 // FILTER使用fixdt(0,16,16)格式：VAL_fixedPoint = VAL_floatingPoint * 2^16。本例中6553 = 0.1 * 2^16
  * Value of COEFFICIENT is in fixdt(1,16,14) // COEFFICIENT的值使用fixdt(1,16,14)格式
@@ -523,8 +523,8 @@
 
   // Extra functionality // 额外功能
   #define CRUISE_CONTROL_SUPPORT            // [-] Flag to enable Cruise Control support. Activation by throttle double-tap, deactivation by brake pedal press. // 启用定速巡航支持。双击油门激活，踩刹车取消。
-  // #define STANDSTILL_HOLD_ENABLE            // [-] Flag to hold the position when standtill is reached. Only available and makes sense for VOLTAGE or TORQUE mode. // 到达停止状态时保持位置的标志。仅适用于电压或扭矩模式。
-  #define ELECTRIC_BRAKE_ENABLE             // [-] Flag to enable electric brake and replace the motor "freewheel" with a constant braking when the input torque request is 0. Only available and makes sense for TORQUE mode. // 启用电子制动（动能回收）。松开油门时电机发电给电池充电，产生轻微阻力。
+  #define STANDSTILL_HOLD_ENABLE            // 到达停止状态时保持位置的标志。仅适用于电压或扭矩模式。
+  #define ELECTRIC_BRAKE_ENABLE             // 启用电子制动（动能回收）。松开油门时电机发电给电池充电，产生轻微阻力。
   #define ELECTRIC_BRAKE_MAX    50          // (0, 500) Maximum electric brake to be applied when input torque request is 0 (pedal fully released). 50 = gentle regen // 动能回收强度。值越大回收越强，松开油门时的阻力也越大。
   #define ELECTRIC_BRAKE_THRES  120         // (0, 500) Threshold below which the electric brake starts engaging. // 电子制动开始介入的阈值（低于此值开始介入）
   #define BRAKE_REGEN_PERCENT   80          // (0-100) Brake pedal max regen strength in percent. 80 = strong enough to stop without mechanical brakes // 刹车踏板最大动能回收百分比。80 = 足以完全刹停（无机械刹车）

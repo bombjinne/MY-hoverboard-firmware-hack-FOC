@@ -446,13 +446,17 @@ void beepShort(uint8_t freq) {
 }
 
 void beepShortMany(uint8_t cnt, int8_t dir) {
-    if (dir >= 0) {   // increasing tone
+    if (dir >= 0) {
       for(uint8_t i = 2*cnt; i >= 2; i=i-2) {
         beepShort(i + 3);
+        buzzerFreq = 0;
+        HAL_Delay(80);
       }
-    } else {          // decreasing tone
+    } else {
       for(uint8_t i = 2; i <= 2*cnt; i=i+2) {
         beepShort(i + 3);
+        buzzerFreq = 0;
+        HAL_Delay(80);
       }
     }
 }
@@ -496,6 +500,15 @@ void calcAvgSpeed(void) {
  * - release potentiometers to the resting postion
  * - press the power button to confirm or wait for the 20 sec timeout
  * The Values will be saved to flash. Values are persistent if you flash with platformio. To erase them, make a full chip erase.
+ 
+ * ADC 极限值自动校准
+ * 此功能用于寻找 ADC 输入的最小值、最大值和中间值
+ * 操作步骤：
+ * - 长按电源键 5 秒以上，听到蜂鸣声后松开
+ * - 反复将电位器拨动至最小和最大极限位置
+ * - 松开电位器，使其回到静止（默认）位置
+ * - 按下电源键确认，或等待 20 秒超时自动确认
+ * 校准数值将保存至 Flash 中。如果使用 PlatformIO 烧录，这些数值会持续保留。若要清除这些数值，需对芯片进行全片擦除。
  */
 void adcCalibLim(void) {
 #ifdef AUTO_CALIBRATION_ENA

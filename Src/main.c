@@ -219,12 +219,12 @@ int main(void) {
   int16_t board_temp_adcFilt  = adc_buffer.temp;
 
   #ifdef MULTI_MODE_DRIVE
-    // Start in mode 0 (Slow / 新手模式)
-    drive_mode = 0;
-    max_speed = MULTI_MODE_DRIVE_M1_MAX;
-    rate = MULTI_MODE_DRIVE_M1_RATE;
-    rtP_Left.n_max = rtP_Right.n_max = MULTI_MODE_M1_N_MOT_MAX << 4;
-    rtP_Left.i_max = rtP_Right.i_max = (MULTI_MODE_M1_I_MOT_MAX * A2BIT_CONV) << 4;
+    // Start in mode 1 (Medium / 中级模式)
+    drive_mode = 1;
+    max_speed = MULTI_MODE_DRIVE_M2_MAX;
+    rate = MULTI_MODE_DRIVE_M2_RATE;
+    rtP_Left.n_max = rtP_Right.n_max = MULTI_MODE_M2_N_MOT_MAX << 4;
+    rtP_Left.i_max = rtP_Right.i_max = (MULTI_MODE_M2_I_MOT_MAX * A2BIT_CONV) << 4;
     printf("Drive mode %i selected: max_speed:%i acc_rate:%i \r\n", drive_mode, max_speed, rate);
 
     #ifdef SUPPORT_BUTTONS_RIGHT
@@ -380,6 +380,21 @@ int main(void) {
         #ifdef SUPPORT_BUTTONS_RIGHT
         if (!backwardDrive) {                   // Forward: PB11 open (HIGH)
           speed = steer + speed;
+          // Re-apply current mode limits (not overwritten by reverse)
+          switch (drive_mode) {
+            case 0:
+              rtP_Left.n_max = rtP_Right.n_max = MULTI_MODE_M1_N_MOT_MAX << 4;
+              rtP_Left.i_max = rtP_Right.i_max = (MULTI_MODE_M1_I_MOT_MAX * A2BIT_CONV) << 4;
+              break;
+            case 1:
+              rtP_Left.n_max = rtP_Right.n_max = MULTI_MODE_M2_N_MOT_MAX << 4;
+              rtP_Left.i_max = rtP_Right.i_max = (MULTI_MODE_M2_I_MOT_MAX * A2BIT_CONV) << 4;
+              break;
+            case 2:
+              rtP_Left.n_max = rtP_Right.n_max = MULTI_MODE_M3_N_MOT_MAX << 4;
+              rtP_Left.i_max = rtP_Right.i_max = (MULTI_MODE_M3_I_MOT_MAX * A2BIT_CONV) << 4;
+              break;
+          }
         } else {                                // Reverse: PB11 closed to GND (LOW)
           speed = steer - speed;
           // Reverse limited to M1 (slowest) speed and current
