@@ -501,59 +501,54 @@
 
 
 
-// ############################ VARIANT_HOVERCAR SETTINGS (卡丁车变体设置) ############################
+// ############################ VARIANT_HOVERCAR SETTINGS ############################
 #ifdef VARIANT_HOVERCAR
   #define FLASH_WRITE_KEY         0x1107  // Flash memory writing key. Change this key to ignore the input calibrations from the flash memory and use the ones in config.h
   #undef  CTRL_MOD_REQ
-  #define CTRL_MOD_REQ            TRQ_MODE  // HOVERCAR works best in TORQUE Mode. // 卡丁车在扭矩模式下效果最佳。松开油门自由滑行，刹车和电子刹车提供动能回收。
-  #define CONTROL_ADC             0         // use ADC as input. Disable CONTROL_SERIAL_USART2, FEEDBACK_SERIAL_USART2, DEBUG_SERIAL_USART2! // 使用ADC作为输入。禁用CONTROL_SERIAL_USART2、FEEDBACK_SERIAL_USART2、DEBUG_SERIAL_USART2！
-  #define SUPPORT_BUTTONS_RIGHT             // use right sensor board cable for button inputs (PB10=Button1, PB11=Button2). Disable SIDEBOARD_SERIAL_USART3! // 使用右侧传感器板线缆作为按钮输入（PB10=按钮1，PB11=按钮2）。禁用SIDEBOARD_SERIAL_USART3！
+  #define CTRL_MOD_REQ            VLT_MODE  // HOVERCAR works best in TORQUE Mode. VOLTAGE mode is preffered when freewheeling is not desired when throttle is released.
+  #define CONTROL_ADC             0         // use ADC as input. Number indicates priority for dual-input. Disable CONTROL_SERIAL_USART2, FEEDBACK_SERIAL_USART2, DEBUG_SERIAL_USART2!
+  #define SIDEBOARD_SERIAL_USART3 1         // Rx from right sensor board: to use photosensors as buttons. Number indicates priority for dual-input. Comment-out if sideboard is not used!
+  #define FEEDBACK_SERIAL_USART3            // Tx to   right sensor board: for LED battery indication. Comment-out if sideboard is not used!
 
-  #define PRI_INPUT1              1, 600, 0, 4095, 0    // Pedal Brake (PA2)  TYPE=1, MIN=resting ADC (~600), MAX=4095 // 刹车踏板（PA2），MIN=静止ADC（约600），MAX=4095
-  #define PRI_INPUT2              1, 600, 0, 4095, 0    // Pedal Accel (PA3)  TYPE=1, MIN=resting ADC (~600), MAX=4095 // 油门踏板（PA3），MIN=静止ADC（约600），MAX=4095
-
-  // #define DEBUG_SERIAL_USART2               // left sensor board cable debug // 左侧传感器板线缆调试（与ADC冲突，已禁用）
+  #define DUAL_INPUTS                       // ADC*(Primary) + Sideboard_R(Auxiliary). Uncomment this to use Dual-inputs
+  #define PRI_INPUT1              1,  1000, 0, 2500, 0  // Pedal Brake        TYPE, MIN, MID, MAX, DEADBAND. See INPUT FORMAT section
+  #define PRI_INPUT2              1,   500, 0, 2200, 0  // Pedal Accel        TYPE, MIN, MID, MAX, DEADBAND. See INPUT FORMAT section
+  #define AUX_INPUT1              2, -1000, 0, 1000, 0  // Sideboard Steer    TYPE, MIN, MID, MAX, DEADBAND. See INPUT FORMAT section
+  #define AUX_INPUT2              2, -1000, 0, 1000, 0  // Sideboard Speed    TYPE, MIN, MID, MAX, DEADBAND. See INPUT FORMAT section
 
   #define SPEED_COEFFICIENT       16384     // 1.0f
-  #define STEER_COEFFICIENT       8192      // 0.5f Only active in Sideboard input // 仅在侧板输入中激活
-  // #define ADC_ALTERNATE_CONNECT             // use to swap ADC inputs // 用于交换ADC输入
-  // #define INVERT_R_DIRECTION                // Invert rotation of right motor // 反转右侧电机旋转方向
-  // #define INVERT_L_DIRECTION                // Invert rotation of left motor // 反转左侧电机旋转方向
-  // #define DEBUG_SERIAL_USART3               // right sensor board cable, disable if I2C (nunchuk or lcd) is used! // 右侧传感器板线缆，如果使用I2C（nunchuk或lcd）则禁用！
+  #define STEER_COEFFICIENT       8192      // 0.5f Only active in Sideboard input
+  // #define ADC_ALTERNATE_CONNECT             // use to swap ADC inputs
+  // #define INVERT_R_DIRECTION                // Invert rotation of right motor
+  // #define INVERT_L_DIRECTION                // Invert rotation of left motor
+  // #define DEBUG_SERIAL_USART3               // right sensor board cable, disable if I2C (nunchuk or lcd) is used!
 
-  // Extra functionality // 额外功能
-  #define CRUISE_CONTROL_SUPPORT            // [-] Flag to enable Cruise Control support. Activation by throttle double-tap, deactivation by brake pedal press. // 启用定速巡航支持。双击油门激活，踩刹车取消。
-  #define STANDSTILL_HOLD_ENABLE            // 到达停止状态时保持位置的标志。仅适用于电压或扭矩模式。
-  #define ELECTRIC_BRAKE_ENABLE             // 启用电子制动（动能回收）。松开油门时电机发电给电池充电，产生轻微阻力。
-  #define ELECTRIC_BRAKE_MAX    50          // (0, 500) Maximum electric brake to be applied when input torque request is 0 (pedal fully released). 50 = gentle regen // 动能回收强度。值越大回收越强，松开油门时的阻力也越大。
-  #define ELECTRIC_BRAKE_THRES  120         // (0, 500) Threshold below which the electric brake starts engaging. // 电子制动开始介入的阈值（低于此值开始介入）
-  #define BRAKE_REGEN_PERCENT   80          // (0-100) Brake pedal max regen strength in percent. 80 = strong enough to stop without mechanical brakes // 刹车踏板最大动能回收百分比。80 = 足以完全刹停（无机械刹车）
+  // Extra functionality
+  // #define CRUISE_CONTROL_SUPPORT            // [-] Flag to enable Cruise Control support. Activation/Deactivation is done by sideboard button or Brake pedal press.
+  // #define STANDSTILL_HOLD_ENABLE            // [-] Flag to hold the position when standtill is reached. Only available and makes sense for VOLTAGE or TORQUE mode.
+  // #define ELECTRIC_BRAKE_ENABLE             // [-] Flag to enable electric brake and replace the motor "freewheel" with a constant braking when the input torque request is 0. Only available and makes sense for TORQUE mode.
+  // #define ELECTRIC_BRAKE_MAX    100         // (0, 500) Maximum electric brake to be applied when input torque request is 0 (pedal fully released).
+  // #define ELECTRIC_BRAKE_THRES  120         // (0, 500) Threshold below which the electric brake starts engaging.
 
-  #define MULTI_MODE_DRIVE                  // This option enables driving modes cycled via PB10 button (see main.c for mode switching logic) // 此选项启用通过PB10按钮循环切换驾驶模式（模式切换逻辑见main.c）
+  #define MULTI_MODE_DRIVE                  // This option enables the selection of 3 driving modes at start-up using combinations of Brake and Throttle pedals (see below)
   #ifdef MULTI_MODE_DRIVE
-      // MODE 1 - Slow (新手模式 - 慢速，≈ 8.6 km/h)
-      #define MULTI_MODE_DRIVE_M1_MAX   400
+      // BEGINNER MODE:     Power ON + Brake [released] + Throttle [released or pressed]
+      #define MULTI_MODE_DRIVE_M1_MAX   175
       #define MULTI_MODE_DRIVE_M1_RATE  250
-      #define MULTI_MODE_M1_I_MOT_MAX   8
-      #define MULTI_MODE_M1_N_MOT_MAX   180
+      #define MULTI_MODE_M1_I_MOT_MAX   4
+      #define MULTI_MODE_M1_N_MOT_MAX   30
 
-      // MODE 2 - Medium (中级模式 - 中速，≈ 21.5 km/h)
-      #define MULTI_MODE_DRIVE_M2_MAX   700
-      #define MULTI_MODE_DRIVE_M2_RATE  350
-      #define MULTI_MODE_M2_I_MOT_MAX   12
-      #define MULTI_MODE_M2_N_MOT_MAX   450
+      // INTERMEDIATE MODE: Power ON + Brake [pressed] + Throttle [released]
+      #define MULTI_MODE_DRIVE_M2_MAX   500
+      #define MULTI_MODE_DRIVE_M2_RATE  300
+      #define MULTI_MODE_M2_I_MOT_MAX   8
+      #define MULTI_MODE_M2_N_MOT_MAX   80
 
-      // MODE 3 - Fast (高级模式 - 快速)
+      // ADVANCED MODE:    Power ON + Brake [pressed] + Throttle [pressed]
       #define MULTI_MODE_DRIVE_M3_MAX   1000
       #define MULTI_MODE_DRIVE_M3_RATE  450
       #define MULTI_MODE_M3_I_MOT_MAX   I_MOT_MAX
       #define MULTI_MODE_M3_N_MOT_MAX   N_MOT_MAX
-
-      // MODE 4 - Turbo (极速模式) - 注释掉，防止电流过大烧毁控制板
-      // #define MULTI_MODE_DRIVE_M4_MAX   1500
-      // #define MULTI_MODE_DRIVE_M4_RATE  600
-      // #define MULTI_MODE_M4_I_MOT_MAX   I_MOT_MAX
-      // #define MULTI_MODE_M4_N_MOT_MAX   2000
   #endif
 
 #endif

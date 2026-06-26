@@ -160,18 +160,13 @@ static int16_t    speed;                // local variable for speed. -1000 to 10
 
 static uint32_t    buzzerTimer_prev = 0;
 static uint32_t    inactivity_timeout_counter;
-static MultipleTap MultipleTapBrake;    // define multiple tap functionality for the Brake pedal (reverse, used without SUPPORT_BUTTONS_RIGHT)
-static MultipleTap MultipleTapThrottle; // define multiple tap functionality for the Throttle pedal (cruise control)
+static MultipleTap MultipleTapBrake;    // define multiple tap functionality for the Brake pedal
 
 static uint16_t rate = RATE; // Adjustable rate to support multiple drive modes on startup
 
 #ifdef MULTI_MODE_DRIVE
   static uint8_t drive_mode;
   static uint16_t max_speed;
-#endif
-
-#ifdef SUPPORT_BUTTONS_RIGHT
-  static uint8_t button1_prev;          // Previous PB10 state for edge detection
 #endif
 
 
@@ -219,79 +214,44 @@ int main(void) {
   int16_t board_temp_adcFilt  = adc_buffer.temp;
 
   #ifdef MULTI_MODE_DRIVE
-    // Start in mode 1 (Medium / 中级模式)
-    drive_mode = 1;
-    max_speed = MULTI_MODE_DRIVE_M2_MAX;
-    rate = MULTI_MODE_DRIVE_M2_RATE;
-    rtP_Left.n_max = rtP_Right.n_max = MULTI_MODE_M2_N_MOT_MAX << 4;
-    rtP_Left.i_max = rtP_Right.i_max = (MULTI_MODE_M2_I_MOT_MAX * A2BIT_CONV) << 4;
-    printf("Drive mode %i selected: max_speed:%i acc_rate:%i \r\n", drive_mode, max_speed, rate);
+    if (adc_buffer.l_tx2 > input1[0].min + 50 && adc_buffer.l_rx2 > input2[0].min + 50) {
+      drive_mode = 2;
+      max_speed = MULTI_MODE_DRIVE_M3_MAX;
+      rate = MULTI_MODE_DRIVE_M3_RATE;
+      rtP_Left.n_max = rtP_Right.n_max = MULTI_MODE_M3_N_MOT_MAX << 4;
+      rtP_Left.i_max = rtP_Right.i_max = (MULTI_MODE_M3_I_MOT_MAX * A2BIT_CONV) << 4;
+    } else if (adc_buffer.l_tx2 > input1[0].min + 50) {
+      drive_mode = 1;
+      max_speed = MULTI_MODE_DRIVE_M2_MAX;
+      rate = MULTI_MODE_DRIVE_M2_RATE;
+      rtP_Left.n_max = rtP_Right.n_max = MULTI_MODE_M2_N_MOT_MAX << 4;
+      rtP_Left.i_max = rtP_Right.i_max = (MULTI_MODE_M2_I_MOT_MAX * A2BIT_CONV) << 4;
+    } else {
+      drive_mode = 0;
+      max_speed = MULTI_MODE_DRIVE_M1_MAX;
+      rate = MULTI_MODE_DRIVE_M1_RATE;
+      rtP_Left.n_max = rtP_Right.n_max = MULTI_MODE_M1_N_MOT_MAX << 4;
+      rtP_Left.i_max = rtP_Right.i_max = (MULTI_MODE_M1_I_MOT_MAX * A2BIT_CONV) << 4;
+    }
 
-    #ifdef SUPPORT_BUTTONS_RIGHT
-    button1_prev = 0;
-    #endif
+    printf("Drive mode %i selected: max_speed:%i acc_rate:%i \r\n", drive_mode, max_speed, rate);
   #endif
 
   // Loop until button is released
   while(HAL_GPIO_ReadPin(BUTTON_PORT, BUTTON_PIN)) { HAL_Delay(10); }
 
+  #ifdef MULTI_MODE_DRIVE
+    // Wait until triggers are released. Exit if timeout elapses (to unblock if the inputs are not calibrated)
+    int iTimeout = 0;
+    while((adc_buffer.l_rx2 + adc_buffer.l_tx2) >= (input1[0].min + input2[0].min) && iTimeout++ < 300) {
+      HAL_Delay(10);
+    }
+  #endif
+
   while(1) {
     if (buzzerTimer - buzzerTimer_prev > 16*DELAY_IN_MAIN_LOOP) {   // 1 ms = 16 ticks buzzerTimer
 
     readCommand();                        // Read Command: input1[inIdx].cmd, input2[inIdx].cmd
-
-    #if defined(MULTI_MODE_DRIVE) && defined(SUPPORT_BUTTONS_RIGHT)
-    {
-      // PB10 (BUTTON1) short press = mode cycling
-      uint8_t button1_now = !HAL_GPIO_ReadPin(BUTTON1_PORT, BUTTON1_PIN);
-      if (button1_now && !button1_prev) {
-        drive_mode = (drive_mode + 1) % 3;
-        switch (drive_mode) {
-          case 0:
-            max_speed = MULTI_MODE_DRIVE_M1_MAX;
-            rate = MULTI_MODE_DRIVE_M1_RATE;
-            rtP_Left.n_max = rtP_Right.n_max = MULTI_MODE_M1_N_MOT_MAX << 4;
-            rtP_Left.i_max = rtP_Right.i_max = (MULTI_MODE_M1_I_MOT_MAX * A2BIT_CONV) << 4;
-            beepShortMany(1, 1);
-            break;
-          case 1:
-            max_speed = MULTI_MODE_DRIVE_M2_MAX;
-            rate = MULTI_MODE_DRIVE_M2_RATE;
-            rtP_Left.n_max = rtP_Right.n_max = MULTI_MODE_M2_N_MOT_MAX << 4;
-            rtP_Left.i_max = rtP_Right.i_max = (MULTI_MODE_M2_I_MOT_MAX * A2BIT_CONV) << 4;
-            beepShortMany(2, 1);
-            break;
-          case 2:
-            max_speed = MULTI_MODE_DRIVE_M3_MAX;
-            rate = MULTI_MODE_DRIVE_M3_RATE;
-            rtP_Left.n_max = rtP_Right.n_max = MULTI_MODE_M3_N_MOT_MAX << 4;
-            rtP_Left.i_max = rtP_Right.i_max = (MULTI_MODE_M3_I_MOT_MAX * A2BIT_CONV) << 4;
-            beepShortMany(3, 1);
-            break;
-        }
-        printf("Drive mode %i selected: max_speed:%i acc_rate:%i \r\n", drive_mode, max_speed, rate);
-      }
-      button1_prev = button1_now;
-
-      // PB11 (BUTTON2) reverse via toggle switch, only effective at standstill
-      if (speedAvgAbs < 20) {
-        backwardDrive = !HAL_GPIO_ReadPin(BUTTON2_PORT, BUTTON2_PIN);
-      }
-    }
-    #endif
-
-    #if defined(CRUISE_CONTROL_SUPPORT) && defined(SUPPORT_BUTTONS_RIGHT)
-    {
-      // Throttle (input2) double-tap to toggle cruise control
-      static uint8_t throttleTap_prev;
-      multipleTapDet(input2[inIdx].cmd, HAL_GetTick(), &MultipleTapThrottle);
-      if (MultipleTapThrottle.b_multipleTap && !throttleTap_prev) {
-        cruiseControl(1);
-      }
-      throttleTap_prev = MultipleTapThrottle.b_multipleTap;
-    }
-    #endif
-
     calcAvgSpeed();                       // Calculate average measured speed: speedAvg, speedAvgAbs
 
     #ifndef VARIANT_TRANSPOTTER
@@ -319,11 +279,9 @@ int main(void) {
 
       #ifdef VARIANT_HOVERCAR
       if (inIdx == CONTROL_ADC) {                                   // Only use use implementation below if pedals are in use (ADC input)
-        #ifndef SUPPORT_BUTTONS_RIGHT
         if (speedAvgAbs < 60) {                                     // Check if Hovercar is physically close to standstill to enable Double tap detection on Brake pedal for Reverse functionality
           multipleTapDet(input1[inIdx].cmd, HAL_GetTick(), &MultipleTapBrake); // Brake pedal in this case is "input1" variable
         }
-        #endif
 
         if (input1[inIdx].cmd > 30) {                               // If Brake pedal (input1) is pressed, bring to 0 also the Throttle pedal (input2) to avoid "Double pedal" driving
           input2[inIdx].cmd = (int16_t)((input2[inIdx].cmd * speedBlend) >> 15);
@@ -333,16 +291,13 @@ int main(void) {
       #endif
 
       #ifdef ELECTRIC_BRAKE_ENABLE
-        electricBrake(speedBlend, backwardDrive);  // Apply Electric Brake. Only available and makes sense for TORQUE Mode
+        electricBrake(speedBlend, MultipleTapBrake.b_multipleTap);  // Apply Electric Brake. Only available and makes sense for TORQUE Mode
       #endif
 
       #ifdef VARIANT_HOVERCAR
       if (inIdx == CONTROL_ADC) {                                   // Only use use implementation below if pedals are in use (ADC input)
         if (speedAvg > 0) {                                         // Make sure the Brake pedal is opposite to the direction of motion AND it goes to 0 as we reach standstill (to avoid Reverse driving by Brake pedal) 
           input1[inIdx].cmd = (int16_t)((-input1[inIdx].cmd * speedBlend) >> 15);
-          #ifdef BRAKE_REGEN_PERCENT                                 // Scale brake regen strength
-          input1[inIdx].cmd = (int16_t)((int32_t)input1[inIdx].cmd * BRAKE_REGEN_PERCENT / 100);
-          #endif
         } else {
           input1[inIdx].cmd = (int16_t)(( input1[inIdx].cmd * speedBlend) >> 15);
         }
@@ -377,38 +332,11 @@ int main(void) {
         }
         #endif
 
-        #ifdef SUPPORT_BUTTONS_RIGHT
-        if (!backwardDrive) {                   // Forward: PB11 open (HIGH)
-          speed = steer + speed;
-          // Re-apply current mode limits (not overwritten by reverse)
-          switch (drive_mode) {
-            case 0:
-              rtP_Left.n_max = rtP_Right.n_max = MULTI_MODE_M1_N_MOT_MAX << 4;
-              rtP_Left.i_max = rtP_Right.i_max = (MULTI_MODE_M1_I_MOT_MAX * A2BIT_CONV) << 4;
-              break;
-            case 1:
-              rtP_Left.n_max = rtP_Right.n_max = MULTI_MODE_M2_N_MOT_MAX << 4;
-              rtP_Left.i_max = rtP_Right.i_max = (MULTI_MODE_M2_I_MOT_MAX * A2BIT_CONV) << 4;
-              break;
-            case 2:
-              rtP_Left.n_max = rtP_Right.n_max = MULTI_MODE_M3_N_MOT_MAX << 4;
-              rtP_Left.i_max = rtP_Right.i_max = (MULTI_MODE_M3_I_MOT_MAX * A2BIT_CONV) << 4;
-              break;
-          }
-        } else {                                // Reverse: PB11 closed to GND (LOW)
-          speed = steer - speed;
-          // Reverse limited to M1 (slowest) speed and current
-          if (speed < -MULTI_MODE_DRIVE_M1_MAX) speed = -MULTI_MODE_DRIVE_M1_MAX;
-          rtP_Left.n_max = rtP_Right.n_max = MULTI_MODE_M1_N_MOT_MAX << 4;
-          rtP_Left.i_max = rtP_Right.i_max = (MULTI_MODE_M1_I_MOT_MAX * A2BIT_CONV) << 4;
-        }
-        #else
-        if (!MultipleTapBrake.b_multipleTap) {  // Forward (original logic via brake pedal double-tap)
-          speed = steer + speed;
+        if (!MultipleTapBrake.b_multipleTap) {  // Check driving direction
+          speed = steer + speed;                // Forward driving: in this case steer = Brake, speed = Throttle
         } else {
-          speed = steer - speed;
+          speed = steer - speed;                // Reverse driving: in this case steer = Brake, speed = Throttle
         }
-        #endif
         steer = 0;                              // Do not apply steering to avoid side effects if STEER_COEFFICIENT is NOT 0
       }
       #endif
@@ -639,16 +567,12 @@ int main(void) {
       beepCount(0, 10, 6);
     } else if (BAT_LVL2_ENABLE && batVoltage < BAT_LVL2) {                                            // 1 beep slow (medium pitch): Low bat 2
       beepCount(0, 10, 30);
-    } else if (BEEPS_BACKWARD && ((cmdR < -50 || cmdL < -50) && speedAvg < 0)) { // 1 beep fast (high pitch): Backward spinning motors
+    } else if (BEEPS_BACKWARD && (((cmdR < -50 || cmdL < -50) && speedAvg < 0) || MultipleTapBrake.b_multipleTap)) { // 1 beep fast (high pitch): Backward spinning motors
       beepCount(0, 5, 1);
-      #ifndef SUPPORT_BUTTONS_RIGHT
       backwardDrive = 1;
-      #endif
     } else {  // do not beep
       beepCount(0, 0, 0);
-      #ifndef SUPPORT_BUTTONS_RIGHT
       backwardDrive = 0;
-      #endif
     }
 
 

@@ -446,17 +446,13 @@ void beepShort(uint8_t freq) {
 }
 
 void beepShortMany(uint8_t cnt, int8_t dir) {
-    if (dir >= 0) {
+    if (dir >= 0) {   // increasing tone
       for(uint8_t i = 2*cnt; i >= 2; i=i-2) {
         beepShort(i + 3);
-        buzzerFreq = 0;
-        HAL_Delay(80);
       }
-    } else {
+    } else {          // decreasing tone
       for(uint8_t i = 2; i <= 2*cnt; i=i+2) {
         beepShort(i + 3);
-        buzzerFreq = 0;
-        HAL_Delay(80);
       }
     }
 }
@@ -1091,10 +1087,9 @@ void readCommand(void) {
       button2 = !HAL_GPIO_ReadPin(BUTTON2_PORT, BUTTON2_PIN);
     #endif
 
-    #if defined(CRUISE_CONTROL_SUPPORT) && (defined(SUPPORT_BUTTONS) || defined(SUPPORT_BUTTONS_LEFT))
-        cruiseControl(button1);                                           // Cruise control activation/deactivation via button1
+    #if defined(CRUISE_CONTROL_SUPPORT) && (defined(SUPPORT_BUTTONS) || defined(SUPPORT_BUTTONS_LEFT) || defined(SUPPORT_BUTTONS_RIGHT))
+        cruiseControl(button1);                                           // Cruise control activation/deactivation
     #endif
-    // SUPPORT_BUTTONS_RIGHT: cruise control is handled in main.c via throttle double-tap, not via button1
 }
 
 
