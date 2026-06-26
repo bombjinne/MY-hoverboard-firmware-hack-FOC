@@ -509,8 +509,8 @@
   #define CONTROL_ADC             0         // use ADC as input. Disable CONTROL_SERIAL_USART2, FEEDBACK_SERIAL_USART2, DEBUG_SERIAL_USART2! // 使用ADC作为输入。禁用CONTROL_SERIAL_USART2、FEEDBACK_SERIAL_USART2、DEBUG_SERIAL_USART2！
   #define SUPPORT_BUTTONS_RIGHT             // use right sensor board cable for button inputs (PB10=Button1, PB11=Button2). Disable SIDEBOARD_SERIAL_USART3! // 使用右侧传感器板线缆作为按钮输入（PB10=按钮1，PB11=按钮2）。禁用SIDEBOARD_SERIAL_USART3！
 
-  #define PRI_INPUT1              1,  0, 0, 4095, 0    // Pedal Brake (PA2)  TYPE=1 Normal Pot, full range // 刹车踏板（PA2），类型=1普通电位器，全范围
-  #define PRI_INPUT2              1,  0, 0, 4095, 0    // Pedal Accel (PA3)  TYPE=1 Normal Pot, full range // 油门踏板（PA3），类型=1普通电位器，全范围
+  #define PRI_INPUT1              1, 600, 0, 4095, 0    // Pedal Brake (PA2)  TYPE=1, MIN=resting ADC (~600), MAX=4095 // 刹车踏板（PA2），MIN=静止ADC（约600），MAX=4095
+  #define PRI_INPUT2              1, 600, 0, 4095, 0    // Pedal Accel (PA3)  TYPE=1, MIN=resting ADC (~600), MAX=4095 // 油门踏板（PA3），MIN=静止ADC（约600），MAX=4095
 
   // #define DEBUG_SERIAL_USART2               // left sensor board cable debug // 左侧传感器板线缆调试（与ADC冲突，已禁用）
 
