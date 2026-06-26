@@ -149,7 +149,7 @@
 // Control selections // 控制选择
 #define CTRL_TYP_SEL    FOC_CTRL        // [-] Control type selection: COM_CTRL, SIN_CTRL, FOC_CTRL (default) // 控制类型选择：COM_CTRL、SIN_CTRL、FOC_CTRL（默认）
 #define CTRL_MOD_REQ    VLT_MODE        // [-] Control mode request: OPEN_MODE, VLT_MODE (default), SPD_MODE, TRQ_MODE. Note: SPD_MODE and TRQ_MODE are only available for CTRL_FOC! // 控制模式请求：OPEN_MODE、VLT_MODE（默认）、SPD_MODE、TRQ_MODE。注意：SPD_MODE和TRQ_MODE仅适用于CTRL_FOC！
-#define DIAG_ENA        1               // [-] Motor Diagnostics enable flag: 0 = Disabled, 1 = Enabled (default) // 电机诊断启用标志：0 = 禁用，1 = 启用（默认）
+#define DIAG_ENA        0               // [-] Motor Diagnostics enable flag: 0 = Disabled, 1 = Enabled (default) // 电机诊断启用标志：0 = 禁用，1 = 启用（默认）【调试期间关闭，排除错误码导致电机不启动的问题】
 
 // Limitation settings // 限制设置
 #define I_MOT_MAX       15              // [A] Maximum single motor current limit // 单电机最大电流限制
@@ -509,8 +509,8 @@
   #define CONTROL_ADC             0         // use ADC as input.
   // 注意: 你用的是PB10/PB11接按钮, 不是侧板, 所以不要定义 SIDEBOARD/FEEDBACK_SERIAL_USART3 和 DUAL_INPUTS
 
-  #define PRI_INPUT1              1,   600, 0, 4095, 0  // 刹车踏板(PA2): 0.5V≈620ADC, 3.3V≈4095ADC
-  #define PRI_INPUT2              1,   600, 0, 4095, 0  // 油门踏板(PA3): 0.5V≈620ADC, 3.3V≈4095ADC
+  #define PRI_INPUT1              1,   600, 600, 4095, 0  // 刹车踏板(PA2): TYPE=1(Normal Pot), MIN=MID=600, MAX=4095, 无死区
+  #define PRI_INPUT2              1,   600, 600, 4095, 0  // 油门踏板(PA3): TYPE=1(Normal Pot), MIN=MID=600, MAX=4095, 无死区
 
   #define SPEED_COEFFICIENT       16384     // 1.0f
   #define STEER_COEFFICIENT       8192      // 0.5f

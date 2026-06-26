@@ -255,13 +255,10 @@ int main(void) {
     calcAvgSpeed();                       // Calculate average measured speed: speedAvg, speedAvgAbs
 
     #ifndef VARIANT_TRANSPOTTER
-      // ####### MOTOR ENABLING: debug - force enable + beep error codes #######
-      if (rtY_Left.z_errCode || rtY_Right.z_errCode) {
-        beepCount(rtY_Left.z_errCode + rtY_Right.z_errCode, 24, 1);
-      } else if (enable == 0) {
-        enable = 1;                       // force enable motors
-        steerFixdt = speedFixdt = 0;      // reset filters
-        beepShort(6);
+      // ####### MOTOR ENABLING #######
+      if (!HAL_GPIO_ReadPin(BUTTON_PORT, BUTTON_PIN)) {
+        enable = 1;
+        steerFixdt = speedFixdt = 0;
         beepShort(4); HAL_Delay(100);
       }
 
