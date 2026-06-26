@@ -503,21 +503,17 @@
 
 // ############################ VARIANT_HOVERCAR SETTINGS ############################
 #ifdef VARIANT_HOVERCAR
-  #define FLASH_WRITE_KEY         0x1108  // 改key以使旧的Flash校准数据失效
+  #define FLASH_WRITE_KEY         0x1109  // 改key以使旧的Flash校准数据失效
   #undef  CTRL_MOD_REQ
   #define CTRL_MOD_REQ            VLT_MODE  // HOVERCAR works best in TORQUE Mode. VOLTAGE mode is preffered when freewheeling is not desired when throttle is released.
-  #define CONTROL_ADC             0         // use ADC as input. Number indicates priority for dual-input. Disable CONTROL_SERIAL_USART2, FEEDBACK_SERIAL_USART2, DEBUG_SERIAL_USART2!
-  #define SIDEBOARD_SERIAL_USART3 1         // Rx from right sensor board: to use photosensors as buttons. Number indicates priority for dual-input. Comment-out if sideboard is not used!
-  #define FEEDBACK_SERIAL_USART3            // Tx to   right sensor board: for LED battery indication. Comment-out if sideboard is not used!
+  #define CONTROL_ADC             0         // use ADC as input.
+  // 注意: 你用的是PB10/PB11接按钮, 不是侧板, 所以不要定义 SIDEBOARD/FEEDBACK_SERIAL_USART3 和 DUAL_INPUTS
 
-  #define DUAL_INPUTS                       // ADC*(Primary) + Sideboard_R(Auxiliary). Uncomment this to use Dual-inputs
   #define PRI_INPUT1              1,   600, 0, 4095, 0  // 刹车踏板(PA2): 0.5V≈620ADC, 3.3V≈4095ADC
   #define PRI_INPUT2              1,   600, 0, 4095, 0  // 油门踏板(PA3): 0.5V≈620ADC, 3.3V≈4095ADC
-  #define AUX_INPUT1              2, -1000, 0, 1000, 0  // Sideboard Steer    TYPE, MIN, MID, MAX, DEADBAND. See INPUT FORMAT section
-  #define AUX_INPUT2              2, -1000, 0, 1000, 0  // Sideboard Speed    TYPE, MIN, MID, MAX, DEADBAND. See INPUT FORMAT section
 
   #define SPEED_COEFFICIENT       16384     // 1.0f
-  #define STEER_COEFFICIENT       8192      // 0.5f Only active in Sideboard input
+  #define STEER_COEFFICIENT       8192      // 0.5f
   // #define ADC_ALTERNATE_CONNECT             // use to swap ADC inputs
   // #define INVERT_R_DIRECTION                // Invert rotation of right motor
   // #define INVERT_L_DIRECTION                // Invert rotation of left motor
