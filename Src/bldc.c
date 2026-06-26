@@ -172,9 +172,9 @@ void DMA1_Channel1_IRQHandler(void) {
   enableFin = enable && !rtY_Left.z_errCode && !rtY_Right.z_errCode;
  
   // ========================= LEFT MOTOR ============================ 
-    // Get hall sensors values
-    uint8_t hall_ul = !(LEFT_HALL_U_PORT->IDR & LEFT_HALL_U_PIN);
-    uint8_t hall_vl = !(LEFT_HALL_V_PORT->IDR & LEFT_HALL_V_PIN);
+    // Get hall sensors values (U<->V swapped for both motors as common fix)
+    uint8_t hall_ul = !(LEFT_HALL_V_PORT->IDR & LEFT_HALL_V_PIN);
+    uint8_t hall_vl = !(LEFT_HALL_U_PORT->IDR & LEFT_HALL_U_PIN);
     uint8_t hall_wl = !(LEFT_HALL_W_PORT->IDR & LEFT_HALL_W_PIN);
 
     /* Set motor inputs here */
@@ -210,9 +210,9 @@ void DMA1_Channel1_IRQHandler(void) {
   
 
   // ========================= RIGHT MOTOR ===========================  
-    // Get hall sensors values
-    uint8_t hall_ur = !(RIGHT_HALL_U_PORT->IDR & RIGHT_HALL_U_PIN);
-    uint8_t hall_vr = !(RIGHT_HALL_V_PORT->IDR & RIGHT_HALL_V_PIN);
+    // Get hall sensors values (U<->V swapped for both motors as common fix)
+    uint8_t hall_ur = !(RIGHT_HALL_V_PORT->IDR & RIGHT_HALL_V_PIN);
+    uint8_t hall_vr = !(RIGHT_HALL_U_PORT->IDR & RIGHT_HALL_U_PIN);
     uint8_t hall_wr = !(RIGHT_HALL_W_PORT->IDR & RIGHT_HALL_W_PIN);
 
     /* Set motor inputs here */
