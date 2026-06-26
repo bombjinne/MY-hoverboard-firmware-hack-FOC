@@ -179,7 +179,7 @@
 #define ADC_MARGIN                100     // ADC input margin applied on the raw ADC min and max to make sure the MIN and MAX values are reached even in the presence of noise // ADC输入裕量，应用于原始ADC最小值和最大值，确保即使在噪声存在时也能达到最小值和最大值
 #define ADC_PROTECT_TIMEOUT       100     // ADC Protection: number of wrong / missing input commands before safety state is taken // ADC保护：进入安全状态前允许的错误/丢失输入命令次数
 #define ADC_PROTECT_THRESH        200     // ADC Protection threshold below/above the MIN/MAX ADC values // ADC保护阈值，低于/高于ADC最小/最大值
-// #define AUTO_CALIBRATION_ENA              // Enable/Disable input auto-calibration by holding power button pressed. Un-comment this if auto-calibration is not needed. // 启用/禁用通过按住电源按钮进行输入自动校准。如果不需要自动校准则取消注释此项。
+#define AUTO_CALIBRATION_ENA              // Enable/Disable input auto-calibration by holding power button pressed. Un-comment this if auto-calibration is not needed. // 启用/禁用通过按住电源按钮进行输入自动校准。如果不需要自动校准则取消注释此项。
 
 /* FILTER is in fixdt(0,16,16): VAL_fixedPoint = VAL_floatingPoint * 2^16. In this case 6553 = 0.1 * 2^16 // FILTER使用fixdt(0,16,16)格式：VAL_fixedPoint = VAL_floatingPoint * 2^16。本例中6553 = 0.1 * 2^16
  * Value of COEFFICIENT is in fixdt(1,16,14) // COEFFICIENT的值使用fixdt(1,16,14)格式
