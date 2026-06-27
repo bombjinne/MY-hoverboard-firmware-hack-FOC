@@ -169,12 +169,17 @@ static uint16_t rate = RATE; // Adjustable rate to support multiple drive modes 
   static uint16_t max_speed;
   #ifdef VARIANT_HOVERCAR
     static uint8_t  reverse_enabled = 0;
-    static uint8_t  speed_btn_prev  = 1;
-    static uint8_t  rev_btn_prev    = 1;
-    static uint32_t speed_btn_debounce  = 0;
-    static uint32_t rev_btn_debounce    = 0;
+    // PB10/PB11 已改为 USART3，按钮变量不再使用
+    // static uint8_t  speed_btn_prev  = 1;
+    // static uint8_t  rev_btn_prev    = 1;
+    // static uint32_t speed_btn_debounce  = 0;
+    // static uint32_t rev_btn_debounce    = 0;
   #endif
 #endif
+
+/* RF遥控命令 */
+volatile uint8_t rf_cmd_pending = RF_CMD_NONE;
+static uint8_t  rf_locked = 0;                  // 1=锁车状态，油门无效
 
 
 int main(void) {
@@ -211,15 +216,17 @@ int main(void) {
   Input_Lim_Init();   // Input Limitations Init
   Input_Init();       // Input Init
 
-  #if defined(VARIANT_HOVERCAR) && defined(MULTI_MODE_DRIVE)
-    // Configure PB10 (Speed Button) and PB11 (Reverse Toggle) as inputs with pull-up
-    __HAL_RCC_GPIOB_CLK_ENABLE();
-    GPIO_InitTypeDef GPIO_Kart_InitStruct;
-    GPIO_Kart_InitStruct.Pin   = KART_SPEED_BTN_PIN | KART_REVERSE_BTN_PIN;
-    GPIO_Kart_InitStruct.Mode  = GPIO_MODE_INPUT;
-    GPIO_Kart_InitStruct.Pull  = GPIO_PULLUP;
-    HAL_GPIO_Init(GPIOB, &GPIO_Kart_InitStruct);
-  #endif
+  // PB10/PB11 已改为 USART3 通讯口（连接扩展板），不再作为 GPIO 按钮
+  // #if defined(VARIANT_HOVERCAR) && defined(MULTI_MODE_DRIVE)
+  // {
+  //   __HAL_RCC_GPIOB_CLK_ENABLE();
+  //   GPIO_InitTypeDef GPIO_Kart_InitStruct;
+  //   GPIO_Kart_InitStruct.Pin   = KART_SPEED_BTN_PIN | KART_REVERSE_BTN_PIN;
+  //   GPIO_Kart_InitStruct.Mode  = GPIO_MODE_INPUT;
+  //   GPIO_Kart_InitStruct.Pull  = GPIO_PULLUP;
+  //   HAL_GPIO_Init(GPIOB, &GPIO_Kart_InitStruct);
+  // }
+  // #endif
 
   HAL_ADC_Start(&hadc1);
   HAL_ADC_Start(&hadc2);
@@ -257,8 +264,49 @@ int main(void) {
     readCommand();                        // Read Command: input1[inIdx].cmd, input2[inIdx].cmd
     calcAvgSpeed();                       // Calculate average measured speed: speedAvg, speedAvgAbs
 
+    /* RF遥控命令处理 */
+    if (rf_cmd_pending != RF_CMD_NONE) {
+      uint8_t cmd = rf_cmd_pending;
+      rf_cmd_pending = RF_CMD_NONE;
+      switch (cmd) {
+        case RF_CMD_LOCK:
+          rf_locked = 1;
+          enable = 0;                       // 禁用电机
+          beepLong(3);                      // 一声长响（锁车）
+          break;
+        case RF_CMD_UNLOCK:
+          rf_locked = 0;
+          enable = 1;                       // 启用电机
+          steerFixdt = speedFixdt = 0;
+          beepShort(5);                     // 第一声
+          beepShort(7);                     // 第二声（解锁两声）
+          break;
+        case RF_CMD_MODE1:
+          #ifdef MULTI_MODE_DRIVE
+          drive_mode = 0;
+          max_speed  = MULTI_MODE_DRIVE_M1_MAX;
+          rate       = MULTI_MODE_DRIVE_M1_RATE;
+          rtP_Left.n_max  = rtP_Right.n_max  = MULTI_MODE_M1_N_MOT_MAX << 4;
+          rtP_Left.i_max  = rtP_Right.i_max  = (MULTI_MODE_M1_I_MOT_MAX * A2BIT_CONV) << 4;
+          beepShort(3);                     // 一声短响（M1）
+          #endif
+          break;
+        case RF_CMD_STOP:
+          enable = 0;                       // 禁用电机（停车）
+          beepLong(1);                      // 一声低长响（停车）
+          break;
+      }
+    }
+
+    /* 锁车状态：油门无效 */
+    if (rf_locked) {
+      input2[CONTROL_ADC].cmd = 0;
+    }
+
     // ####### KART MODE: PB10 Speed Button + PB11 Reverse Toggle #######
-    #if defined(VARIANT_HOVERCAR) && defined(MULTI_MODE_DRIVE)
+    // PB10/PB11 已改为 USART3 通讯口，按钮功能已禁用
+    // 换挡和倒挡功能将通过扩展板 USART3 通讯实现
+    #if 0 // defined(VARIANT_HOVERCAR) && defined(MULTI_MODE_DRIVE)
     {
       uint8_t speed_btn  = HAL_GPIO_ReadPin(KART_SPEED_BTN_PORT,  KART_SPEED_BTN_PIN);
       uint8_t rev_btn    = HAL_GPIO_ReadPin(KART_REVERSE_BTN_PORT, KART_REVERSE_BTN_PIN);
@@ -385,15 +433,14 @@ int main(void) {
       if (inIdx == CONTROL_ADC) {               // Only use use implementation below if pedals are in use (ADC input)
 
         #ifdef MULTI_MODE_DRIVE
-        if (speed >= max_speed) {
-          speed = max_speed;
-        }
+        speed = (int16_t)(((int32_t)speed * max_speed) / 1000);
         #endif
 
         if (!reverse_enabled) {             // PB11 reverse toggle
           speed = steer + speed;             // Forward: steer = Brake, speed = Throttle
         } else {
           speed = steer - speed;             // Reverse: steer = Brake, speed = Throttle
+          speed = CLAMP(speed, -240, 240);   // 倒车限速M1档(240≈8km/h)
         }
         steer = 0;                           // No steering on kart
       }

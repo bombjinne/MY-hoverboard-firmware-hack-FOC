@@ -189,14 +189,14 @@
 #define STANDSTILL_HOLD_ENABLE              // [-] 静止保持标志。到达静止时保持位置。仅在电压或扭矩模式下有效。
 #define ELECTRIC_BRAKE_ENABLE               // [-] 电制动使能标志。输入扭矩请求为0时用恒定制动替代电机"自由转动"。仅在扭矩模式下有效。
 #define ELECTRIC_BRAKE_MAX    50            // (0, 500) 输入扭矩请求为0时（踏板完全松开）施加的最大电制动力。
-#define ELECTRIC_BRAKE_THRES  120           // (0, 500) 电制动开始介入的阈值。
+#define ELECTRIC_BRAKE_THRES  30            // (0, 500) 电制动开始介入的阈值。降低此值可减少油门死区行程。
 // ########################### END OF MOTOR CONTROL ########################
 
 
 
 // ############################## DEFAULT SETTINGS ############################
 // 默认设置（如果之前未设置则在此文件末尾应用）
-#define INACTIVITY_TIMEOUT        8       // 不行驶后自动关机的分钟数。不太精确。
+  #define INACTIVITY_TIMEOUT        3       // 不行驶后自动关机的分钟数。不太精确。
 #define BEEPS_BACKWARD            1       // 倒车蜂鸣，0或1
 #define ADC_MARGIN                100     // ADC输入余量，施加在原始ADC最小值和最大值上，确保在噪声存在时仍能达到MIN和MAX值
 #define ADC_PROTECT_TIMEOUT       100     // ADC保护：进入安全状态前的错误/缺失输入命令数
@@ -542,6 +542,10 @@
   #define PRI_INPUT1              3, 0, 0, 4095, 0  // 刹车踏板 TYPE=3 自动检测，通过开机流程校准
   #define PRI_INPUT2              3, 0, 0, 4095, 0  // 油门踏板 TYPE=3 自动检测，通过开机流程校准
 
+  // 卡丁车扩展板：PB10/PB11 = USART3 通讯口（连接扩展板）
+  #define FEEDBACK_SERIAL_USART3              // 右线缆 USART3 发送 Feedback 给扩展板
+  #define RF_CMD_SERIAL_USART3                // 右线缆 USART3 接收 RF遥控命令（4字节帧）
+
   #define SPEED_COEFFICIENT       16384     // 速度系数 1.0f
   #define STEER_COEFFICIENT       8192      // 转向系数 0.5f
 
@@ -572,6 +576,14 @@
       #define MULTI_MODE_M3_I_MOT_MAX   I_MOT_MAX  // 最大电流 = 全局限制
       #define MULTI_MODE_M3_N_MOT_MAX   N_MOT_MAX  // 最大转速 = 全局限制
   #endif
+
+  // RF遥控命令编码（与扩展板一致）
+  #define RF_CMD_NONE          0x00
+  #define RF_CMD_LOCK          0x01           // 锁车：禁用油门
+  #define RF_CMD_UNLOCK        0x02           // 解锁：启用油门
+  #define RF_CMD_MODE1         0x03           // 切换到M1档
+  #define RF_CMD_STOP          0x04           // 停车：激活驻车
+  #define RF_CMD_START_FRAME   0xAA           // RF命令帧起始字节
 
 #endif
 

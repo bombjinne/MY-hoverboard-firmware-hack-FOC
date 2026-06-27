@@ -154,7 +154,7 @@ SerialSideboard Sideboard_L_raw;
 static uint32_t Sideboard_L_len = sizeof(Sideboard_L);
 #endif
 
-#if defined(DEBUG_SERIAL_USART3) || defined(CONTROL_SERIAL_USART3) || defined(SIDEBOARD_SERIAL_USART3)
+#if defined(DEBUG_SERIAL_USART3) || defined(CONTROL_SERIAL_USART3) || defined(SIDEBOARD_SERIAL_USART3) || defined(RF_CMD_SERIAL_USART3)
 static uint8_t  rx_buffer_R[SERIAL_BUFFER_SIZE];      // USART Rx DMA circular buffer
 static uint32_t rx_buffer_R_len = ARRAY_LEN(rx_buffer_R);
 #endif
@@ -292,7 +292,7 @@ void Input_Init(void) {
     HAL_UART_Receive_DMA(&huart2, (uint8_t *)rx_buffer_L, sizeof(rx_buffer_L));
     UART_DisableRxErrors(&huart2);
   #endif
-  #if defined(DEBUG_SERIAL_USART3) || defined(CONTROL_SERIAL_USART3) || defined(SIDEBOARD_SERIAL_USART3)
+  #if defined(DEBUG_SERIAL_USART3) || defined(CONTROL_SERIAL_USART3) || defined(SIDEBOARD_SERIAL_USART3) || defined(RF_CMD_SERIAL_USART3)
     HAL_UART_Receive_DMA(&huart3, (uint8_t *)rx_buffer_R, sizeof(rx_buffer_R));
     UART_DisableRxErrors(&huart3);
   #endif
@@ -405,7 +405,7 @@ void Input_Init(void) {
   * @retval None
   */
 #if defined(DEBUG_SERIAL_USART2) || defined(CONTROL_SERIAL_USART2) || defined(SIDEBOARD_SERIAL_USART2) || \
-    defined(DEBUG_SERIAL_USART3) || defined(CONTROL_SERIAL_USART3) || defined(SIDEBOARD_SERIAL_USART3)
+    defined(DEBUG_SERIAL_USART3) || defined(CONTROL_SERIAL_USART3) || defined(SIDEBOARD_SERIAL_USART3) || defined(RF_CMD_SERIAL_USART3)
 void UART_DisableRxErrors(UART_HandleTypeDef *huart)
 {  
   CLEAR_BIT(huart->Instance->CR1, USART_CR1_PEIE);    /* Disable PE (Parity Error) interrupts */  
@@ -672,8 +672,7 @@ void updateCurSpdLim(void) {
 void standstillHold(void) {
   #if defined(STANDSTILL_HOLD_ENABLE) && (CTRL_TYP_SEL == FOC_CTRL) && (CTRL_MOD_REQ != SPD_MODE)
     if (!rtP_Left.b_cruiseCtrlEna) {                                  // If Stanstill in NOT Active -> try Activation
-      if (((input1[inIdx].cmd > 50 || input2[inIdx].cmd < -50) && speedAvgAbs < 30) // Check if Brake is pressed AND measured speed is small
-          || (input2[inIdx].cmd < 20 && speedAvgAbs < 5)) {           // OR Throttle is small AND measured speed is very small
+      if (((input1[inIdx].cmd > 50 || input2[inIdx].cmd < -50) && speedAvgAbs < 30)) { // 刹车踩下且车速低时激活驻车
         rtP_Left.n_cruiseMotTgt   = 0;
         rtP_Right.n_cruiseMotTgt  = 0;
         rtP_Left.b_cruiseCtrlEna  = 1;
@@ -682,7 +681,7 @@ void standstillHold(void) {
       } 
     }
     else {                                                            // If Stanstill is Active -> try Deactivation
-      if (input1[inIdx].cmd < 20 && input2[inIdx].cmd > 50 && !cruiseCtrlAcv) { // Check if Brake is released AND Throttle is pressed AND no Cruise Control
+      if (input1[inIdx].cmd < 20 && !cruiseCtrlAcv) {                    // 刹车松开即释放驻车,允许自由滑行
         rtP_Left.b_cruiseCtrlEna  = 0;
         rtP_Right.b_cruiseCtrlEna = 0;
         standstillAcv = 0;
@@ -1161,7 +1160,7 @@ void usart2_rx_check(void)
  */
 void usart3_rx_check(void)
 {
-  #if defined(DEBUG_SERIAL_USART3) || defined(CONTROL_SERIAL_USART3) || defined(SIDEBOARD_SERIAL_USART3)
+  #if defined(DEBUG_SERIAL_USART3) || defined(CONTROL_SERIAL_USART3) || defined(SIDEBOARD_SERIAL_USART3) || defined(RF_CMD_SERIAL_USART3)
   static uint32_t old_pos;
   uint32_t pos;  
   pos = rx_buffer_R_len - __HAL_DMA_GET_COUNTER(huart3.hdmarx);         // Calculate current position in buffer
@@ -1214,10 +1213,41 @@ void usart3_rx_check(void)
   }
   #endif // SIDEBOARD_SERIAL_USART3
 
-  #if defined(DEBUG_SERIAL_USART3) || defined(CONTROL_SERIAL_USART3) || defined(SIDEBOARD_SERIAL_USART3)
+  #if defined(DEBUG_SERIAL_USART3) || defined(CONTROL_SERIAL_USART3) || defined(SIDEBOARD_SERIAL_USART3) || defined(RF_CMD_SERIAL_USART3)
   old_pos = pos;                                                        // Update old position
   if (old_pos == rx_buffer_R_len) {                                     // Check and manually update if we reached end of buffer
     old_pos = 0;
+  }
+  #endif
+
+  /* RF遥控命令接收（扩展板通过USART2 TX发送，主板USART3 RX接收） */
+  #ifdef RF_CMD_SERIAL_USART3
+  {
+    static uint8_t rf_cmd_state = 0;
+    static uint8_t rf_cmd_buf[4];
+
+    for (uint32_t i = 0; i < pos; i++) {
+      uint8_t b = rx_buffer_R[i];
+      switch (rf_cmd_state) {
+        case 0:  // 等待起始字节 0xAA
+          if (b == 0xAA) { rf_cmd_buf[0] = b; rf_cmd_state = 1; }
+          break;
+        case 1:  // 接收cmd
+          rf_cmd_buf[1] = b; rf_cmd_state = 2;
+          break;
+        case 2:  // 接收reserved
+          rf_cmd_buf[2] = b; rf_cmd_state = 3;
+          break;
+        case 3:  // 接收checksum并校验
+          rf_cmd_buf[3] = b;
+          if (b == (rf_cmd_buf[0] ^ rf_cmd_buf[1] ^ rf_cmd_buf[2])) {
+            extern volatile uint8_t rf_cmd_pending;
+            rf_cmd_pending = rf_cmd_buf[1];
+          }
+          rf_cmd_state = 0;
+          break;
+      }
+    }
   }
   #endif
 }
@@ -1352,7 +1382,23 @@ void usart_process_sideboard(SerialSideboard *Sideboard_in, SerialSideboard *Sid
  * This function manages the leds behavior connected to the sideboard
  */
 void sideboardLeds(uint8_t *leds) {
-  #if defined(SIDEBOARD_SERIAL_USART2) || defined(SIDEBOARD_SERIAL_USART3)
+  #if defined(SIDEBOARD_SERIAL_USART2) || defined(SIDEBOARD_SERIAL_USART3) || defined(FEEDBACK_SERIAL_USART2) || defined(FEEDBACK_SERIAL_USART3)
+    #ifdef VARIANT_HOVERCAR
+      // VARIANT_HOVERCAR: LED4=刹车灯, LED5=倒车喇叭
+      // 刹车: LED4_SET → 扩展板PB5(刹车灯继电器)
+      if (brakePressed) {
+        *leds |= LED4_SET;
+      } else {
+        *leds &= ~LED4_SET;
+      }
+
+      // 倒车: LED5_SET → 扩展板PB9(倒车喇叭继电器)
+      if (backwardDrive) {
+        *leds |= LED5_SET;
+      } else {
+        *leds &= ~LED5_SET;
+      }
+    #else
     // Enable flag: use LED4 (bottom Blue)
     // enable == 1, turn on led
     // enable == 0, blink led
@@ -1416,6 +1462,7 @@ void sideboardLeds(uint8_t *leds) {
       *leds |= LED3_SET;
       *leds &= ~LED1_SET & ~LED2_SET;
     }
+    #endif
   #endif
 }
 
