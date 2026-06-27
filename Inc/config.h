@@ -583,6 +583,9 @@
   #define RF_CMD_UNLOCK        0x02           // 解锁：启用油门
   #define RF_CMD_MODE1         0x03           // 切换到M1档
   #define RF_CMD_STOP          0x04           // 停车：激活驻车
+  #define RF_CMD_NEXT_MODE     0x05           // 换挡：循环 M1→M2→M3→M1
+  #define RF_CMD_REVERSE_ON    0x06           // 倒车开
+  #define RF_CMD_REVERSE_OFF   0x07           // 倒车关
   #define RF_CMD_START_FRAME   0xAA           // RF命令帧起始字节
 
 #endif

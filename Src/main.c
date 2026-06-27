@@ -295,6 +295,43 @@ int main(void) {
           enable = 0;                       // 禁用电机（停车）
           beepLong(1);                      // 一声低长响（停车）
           break;
+        case RF_CMD_NEXT_MODE:
+          #ifdef MULTI_MODE_DRIVE
+          drive_mode = (drive_mode + 1) % 3;
+          switch (drive_mode) {
+            case 0:
+              max_speed  = MULTI_MODE_DRIVE_M1_MAX;
+              rate       = MULTI_MODE_DRIVE_M1_RATE;
+              rtP_Left.n_max  = rtP_Right.n_max  = MULTI_MODE_M1_N_MOT_MAX << 4;
+              rtP_Left.i_max  = rtP_Right.i_max  = (MULTI_MODE_M1_I_MOT_MAX * A2BIT_CONV) << 4;
+              beepShort(3);
+              break;
+            case 1:
+              max_speed  = MULTI_MODE_DRIVE_M2_MAX;
+              rate       = MULTI_MODE_DRIVE_M2_RATE;
+              rtP_Left.n_max  = rtP_Right.n_max  = MULTI_MODE_M2_N_MOT_MAX << 4;
+              rtP_Left.i_max  = rtP_Right.i_max  = (MULTI_MODE_M2_I_MOT_MAX * A2BIT_CONV) << 4;
+              beepShort(5);
+              break;
+            case 2:
+              max_speed  = MULTI_MODE_DRIVE_M3_MAX;
+              rate       = MULTI_MODE_DRIVE_M3_RATE;
+              rtP_Left.n_max  = rtP_Right.n_max  = MULTI_MODE_M3_N_MOT_MAX << 4;
+              rtP_Left.i_max  = rtP_Right.i_max  = (MULTI_MODE_M3_I_MOT_MAX * A2BIT_CONV) << 4;
+              beepShort(7);
+              break;
+          }
+          #endif
+          break;
+        case RF_CMD_REVERSE_ON:
+          backwardDrive = 1;
+          beepShort(3);
+          beepLong(1);
+          break;
+        case RF_CMD_REVERSE_OFF:
+          backwardDrive = 0;
+          beepLong(1);
+          break;
       }
     }
 
