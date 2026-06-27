@@ -172,10 +172,10 @@ void DMA1_Channel1_IRQHandler(void) {
   enableFin = enable && !rtY_Left.z_errCode && !rtY_Right.z_errCode;
  
   // ========================= LEFT MOTOR ============================ 
-    // Get hall sensors values
+    // Get hall sensors values 【调试：左电机 V/W 互换】
     uint8_t hall_ul = !(LEFT_HALL_U_PORT->IDR & LEFT_HALL_U_PIN);
-    uint8_t hall_vl = !(LEFT_HALL_V_PORT->IDR & LEFT_HALL_V_PIN);
-    uint8_t hall_wl = !(LEFT_HALL_W_PORT->IDR & LEFT_HALL_W_PIN);
+    uint8_t hall_vl = !(LEFT_HALL_W_PORT->IDR & LEFT_HALL_W_PIN);  // W引脚 -> V变量
+    uint8_t hall_wl = !(LEFT_HALL_V_PORT->IDR & LEFT_HALL_V_PIN);  // V引脚 -> W变量
 
     /* Set motor inputs here */
     rtU_Left.b_motEna     = enableFin;
@@ -210,10 +210,10 @@ void DMA1_Channel1_IRQHandler(void) {
   
 
   // ========================= RIGHT MOTOR ===========================  
-    // Get hall sensors values
+    // Get hall sensors values 【调试：右电机 V/W 互换】
     uint8_t hall_ur = !(RIGHT_HALL_U_PORT->IDR & RIGHT_HALL_U_PIN);
-    uint8_t hall_vr = !(RIGHT_HALL_V_PORT->IDR & RIGHT_HALL_V_PIN);
-    uint8_t hall_wr = !(RIGHT_HALL_W_PORT->IDR & RIGHT_HALL_W_PIN);
+    uint8_t hall_vr = !(RIGHT_HALL_W_PORT->IDR & RIGHT_HALL_W_PIN);  // W引脚 -> V变量
+    uint8_t hall_wr = !(RIGHT_HALL_V_PORT->IDR & RIGHT_HALL_V_PIN);  // V引脚 -> W变量
 
     /* Set motor inputs here */
     rtU_Right.b_motEna      = enableFin;

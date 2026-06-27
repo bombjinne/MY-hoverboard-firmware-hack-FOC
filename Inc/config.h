@@ -77,8 +77,8 @@
 #define BAT_CALIB_ADC           1492      // adc-value measured by mainboard (value nr 5 on UART debug output) // 主板测量的ADC值（UART调试输出上的值5）
 #define BAT_CELLS               10        // battery number of cells. Normal Hoverboard battery: 10s // 电池串联电芯数。普通平衡车电池：10串
 #define BAT_LVL2_ENABLE         0         // to beep or not to beep, 1 or 0 // 是否蜂鸣，1或0
-#define BAT_LVL1_ENABLE         1         // to beep or not to beep, 1 or 0 // 是否蜂鸣，1或0
-#define BAT_DEAD_ENABLE         1         // to poweroff or not to poweroff, 1 or 0 // 是否关机，1或0
+#define BAT_LVL1_ENABLE         0         // to beep or not to beep, 1 or 0 // 是否蜂鸣，1或0 【调试：临时禁用】
+#define BAT_DEAD_ENABLE         0         // to poweroff or not to poweroff, 1 or 0 // 是否关机，1或0 【调试：临时禁用】
 #define BAT_BLINK_INTERVAL      80        // battery led blink interval (80 loops * 5ms ~= 400ms) // 电池LED闪烁间隔（80个循环 * 5毫秒 ≈ 400毫秒）
 #define BAT_LVL5                (390 * BAT_CELLS * BAT_CALIB_ADC) / BAT_CALIB_REAL_VOLTAGE    // 绿色闪烁：不蜂鸣
 #define BAT_LVL4                (380 * BAT_CELLS * BAT_CALIB_ADC) / BAT_CALIB_REAL_VOLTAGE    // 黄色：不蜂鸣
@@ -164,7 +164,7 @@
 #define FIELD_WEAK_LO   750             // ( 500, 1000] Input target Low threshold for starting Field Weakening / Phase Advance. Do NOT set this higher than 1000. // 开始弱磁/提前角的输入目标低阈值。请勿设置高于1000
 
 // Extra functionality // 额外功能
-#define STANDSTILL_HOLD_ENABLE          // 到达停止状态时保持位置的标志。仅适用于电压或扭矩模式。
+// #define STANDSTILL_HOLD_ENABLE          // 【调试：临时禁用】到达停止状态时保持位置的标志。仅适用于电压或扭矩模式。
 #define ELECTRIC_BRAKE_ENABLE           // [-] Flag to enable electric brake and replace the motor "freewheel" with a constant braking when the input torque request is 0. Only available and makes sense for TORQUE mode. // 启用电子制动，当输入扭矩请求为0时用恒定制动代替电机"自由滑行"。仅适用于扭矩模式。
 #define ELECTRIC_BRAKE_MAX    50       // (0, 500) Maximum electric brake to be applied when input torque request is 0 (pedal fully released). // 输入扭矩请求为0（踏板完全松开）时施加的最大电子制动
 #define ELECTRIC_BRAKE_THRES  120       // (0, 500) Threshold below at which the electric brake starts engaging. // 电子制动开始介入的阈值（低于此值开始制动）
@@ -550,7 +550,7 @@
 #endif
 
 // Multiple tap detection: default DOUBLE Tap on Brake pedal (4 pulses) // 多次点击检测：默认为刹车踏板双击（4个脉冲）
-#define MULTIPLE_TAP_NR           2 * 2       // [-] Define tap number: MULTIPLE_TAP_NR = number_of_taps * 2, number_of_taps = 1 (for single taping), 2 (for double tapping), 3 (for triple tapping), etc... // 定义点击次数：MULTIPLE_TAP_NR = 点击次数 * 2，点击次数 = 1（单击）、2（双击）、3（三击）等
+#define MULTIPLE_TAP_NR           0       // 【调试：临时禁用双击检测】Define tap number: MULTIPLE_TAP_NR = number_of_taps * 2
 #define MULTIPLE_TAP_HI           600         // [-] Multiple tap detection High hysteresis threshold // 多次点击检测高滞后阈值
 #define MULTIPLE_TAP_LO           200         // [-] Multiple tap detection Low hysteresis threshold // 多次点击检测低滞后阈值
 #define MULTIPLE_TAP_TIMEOUT      2000        // [ms] Multiple tap detection Timeout period. The taps need to happen within this time window to be accepted. // 多次点击检测超时时间。点击需要在此时间窗口内发生才会被接受。
