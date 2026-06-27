@@ -1,0 +1,49 @@
+name: Build and Release
+
+on:
+  push:
+    branches: [ '*' ]
+    tags: [ 'v*' ]
+  pull_request:
+    branches: [ '*' ]
+
+permissions:
+  contents: write
+  
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+    - uses: carlosperate/arm-none-eabi-gcc-action@v1
+      with:
+        release: '9-2019-q4'
+
+    - name: Build with make
+      env:
+        VARIANT: VARIANT_HOVERCAR
+      run: make
+
+    - name: Install PlatformIO
+      run: |
+        python -m pip install --upgrade pip
+        pip install --upgrade platformio
+
+    - name: Build with PlatformIO
+      run: pio run
+
+    - name: Upload Build Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        path: ${{github.workspace}}/.pio/build/**
+        name: ${{github.event.repository.name}}_build_${{github.run_number}}
+        retention-days: 90
+
+    - name: Create Release
+      if: startsWith(github.ref, 'refs/tags/v')
+      uses: softprops/action-gh-release@v2
+      with:
+        files: |
+          .pio/build/VARIANT_HOVERCAR/firmware.bin
+        generate_release_notes: true

@@ -1,0 +1,13 @@
+!build/hover.hex
+.pio/
+.pioenvs/
+.vscode/
+MDK-ARM/DebugConfig/
+MDK-ARM/Listing/
+MDK-ARM/Objects/
+MDK-ARM/RTE/
+MDK-ARM/*.uvguix.*
+build/
+
+*.log
+firmware.bin
