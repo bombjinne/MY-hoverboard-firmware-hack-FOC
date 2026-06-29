@@ -242,7 +242,7 @@
  * when activated, it maintains the current speed by switching to SPD_MODE. Acceleration is still possible via the input request, but when released it resumes to previous set speed.
  * when deactivated, it returns to previous control MODE and follows the input request.
 */
-// #define CRUISE_CONTROL_SUPPORT
+#define CRUISE_CONTROL_SUPPORT                // 定速巡航：双击油门开启，踩刹车取消
 // #define SUPPORT_BUTTONS_LEFT              // Use button1 (Blue Left cable)  to activate/deactivate Cruise Control
 // #define SUPPORT_BUTTONS_RIGHT             // Use button1 (Blue Right cable) to activate/deactivate Cruise Control
 

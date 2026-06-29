@@ -161,6 +161,7 @@ static int16_t    speed;                // local variable for speed. -1000 to 10
 static uint32_t    buzzerTimer_prev = 0;
 static uint32_t    inactivity_timeout_counter;
 static MultipleTap MultipleTapBrake;    // define multiple tap functionality for the Brake pedal
+static MultipleTap MultipleTapThrottle; // define multiple tap functionality for the Throttle pedal (double-click cruise control)
 
 static uint16_t rate = RATE; // Adjustable rate to support multiple drive modes on startup
 
@@ -180,6 +181,7 @@ static uint16_t rate = RATE; // Adjustable rate to support multiple drive modes 
 /* RF遥控命令 */
 volatile uint8_t rf_cmd_pending = RF_CMD_NONE;
 static uint8_t  rf_locked = 0;                  // 1=锁车状态，油门无效
+static uint8_t  rf_reverse_enabled = 0;         // RF遥控倒车使能（PA4开关触发）
 
 
 int main(void) {
@@ -288,7 +290,7 @@ int main(void) {
           rate       = MULTI_MODE_DRIVE_M1_RATE;
           rtP_Left.n_max  = rtP_Right.n_max  = MULTI_MODE_M1_N_MOT_MAX << 4;
           rtP_Left.i_max  = rtP_Right.i_max  = (MULTI_MODE_M1_I_MOT_MAX * A2BIT_CONV) << 4;
-          beepShort(3);                     // 一声短响（M1）
+          beepShort(5);                     // 一声短响（M1）
           #endif
           break;
         case RF_CMD_STOP:
@@ -304,31 +306,35 @@ int main(void) {
               rate       = MULTI_MODE_DRIVE_M1_RATE;
               rtP_Left.n_max  = rtP_Right.n_max  = MULTI_MODE_M1_N_MOT_MAX << 4;
               rtP_Left.i_max  = rtP_Right.i_max  = (MULTI_MODE_M1_I_MOT_MAX * A2BIT_CONV) << 4;
-              beepShort(3);
+              beepShort(5);
               break;
             case 1:
               max_speed  = MULTI_MODE_DRIVE_M2_MAX;
               rate       = MULTI_MODE_DRIVE_M2_RATE;
               rtP_Left.n_max  = rtP_Right.n_max  = MULTI_MODE_M2_N_MOT_MAX << 4;
               rtP_Left.i_max  = rtP_Right.i_max  = (MULTI_MODE_M2_I_MOT_MAX * A2BIT_CONV) << 4;
-              beepShort(5);
+              beepShort(5); beepShort(5);
               break;
             case 2:
               max_speed  = MULTI_MODE_DRIVE_M3_MAX;
               rate       = MULTI_MODE_DRIVE_M3_RATE;
               rtP_Left.n_max  = rtP_Right.n_max  = MULTI_MODE_M3_N_MOT_MAX << 4;
               rtP_Left.i_max  = rtP_Right.i_max  = (MULTI_MODE_M3_I_MOT_MAX * A2BIT_CONV) << 4;
-              beepShort(7);
+              beepShort(5); beepShort(5); beepShort(5);
               break;
           }
           #endif
           break;
         case RF_CMD_REVERSE_ON:
+          rf_reverse_enabled = 1;
+          reverse_enabled = 1;
           backwardDrive = 1;
           beepShort(3);
           beepLong(1);
           break;
         case RF_CMD_REVERSE_OFF:
+          rf_reverse_enabled = 0;
+          reverse_enabled = 0;
           backwardDrive = 0;
           beepLong(1);
           break;
@@ -425,6 +431,14 @@ int main(void) {
         if (speedAvgAbs < 60) {                                     // Check if Hovercar is physically close to standstill to enable Double tap detection on Brake pedal for Reverse functionality
           multipleTapDet(input1[inIdx].cmd, HAL_GetTick(), &MultipleTapBrake); // Brake pedal in this case is "input1" variable
         }
+
+        #ifdef CRUISE_CONTROL_SUPPORT
+        multipleTapDet(input2[inIdx].cmd, HAL_GetTick(), &MultipleTapThrottle); // Throttle double-tap detection for cruise control
+        if (MultipleTapThrottle.b_multipleTap) {
+          MultipleTapThrottle.b_multipleTap = 0;
+          cruiseControl(1);                                         // Double-click throttle: activate cruise control
+        }
+        #endif
 
         if (input1[inIdx].cmd > 80) {                               // If Brake pedal (input1) is pressed, bring to 0 also the Throttle pedal (input2) to avoid "Double pedal" driving
           input2[inIdx].cmd = (int16_t)((input2[inIdx].cmd * speedBlend) >> 15);
@@ -709,12 +723,14 @@ int main(void) {
       beepCount(0, 10, 6);
     } else if (BAT_LVL2_ENABLE && batVoltage < BAT_LVL2) {                                            // 1 beep slow (medium pitch): Low bat 2
       beepCount(0, 10, 30);
-    } else if (BEEPS_BACKWARD && (((cmdR < -50 || cmdL < -50) && speedAvg < 0) || reverse_enabled)) { // Reverse beeper: ~1s interval
+    } else if (BEEPS_BACKWARD && (((cmdR < -50 || cmdL < -50) && speedAvg < 0) || reverse_enabled || rf_reverse_enabled)) { // Reverse beeper: ~1s interval
       beepCount(0, 8, 2);
       backwardDrive = 1;
     } else {  // do not beep
       beepCount(0, 0, 0);
-      backwardDrive = 0;
+      if (!rf_reverse_enabled) {
+        backwardDrive = 0;
+      }
     }
 
 

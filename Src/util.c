@@ -1213,32 +1213,40 @@ void usart3_rx_check(void)
   }
   #endif // SIDEBOARD_SERIAL_USART3
 
-  #if defined(DEBUG_SERIAL_USART3) || defined(CONTROL_SERIAL_USART3) || defined(SIDEBOARD_SERIAL_USART3) || defined(RF_CMD_SERIAL_USART3)
-  old_pos = pos;                                                        // Update old position
-  if (old_pos == rx_buffer_R_len) {                                     // Check and manually update if we reached end of buffer
-    old_pos = 0;
-  }
-  #endif
-
   /* RF遥控命令接收（扩展板通过USART2 TX发送，主板USART3 RX接收） */
   #ifdef RF_CMD_SERIAL_USART3
-  {
+  if (pos != old_pos) {
     static uint8_t rf_cmd_state = 0;
     static uint8_t rf_cmd_buf[4];
 
-    for (uint32_t i = 0; i < pos; i++) {
+    uint32_t start = old_pos;
+    uint32_t end   = pos;
+    if (end < start) {                                                  // DMA环形缓冲区回绕
+      for (uint32_t i = start; i < rx_buffer_R_len; i++) {
+        uint8_t b = rx_buffer_R[i];
+        switch (rf_cmd_state) {
+          case 0:  if (b == 0xAA) { rf_cmd_buf[0] = b; rf_cmd_state = 1; } break;
+          case 1:  rf_cmd_buf[1] = b; rf_cmd_state = 2; break;
+          case 2:  rf_cmd_buf[2] = b; rf_cmd_state = 3; break;
+          case 3:
+            rf_cmd_buf[3] = b;
+            if (b == (rf_cmd_buf[0] ^ rf_cmd_buf[1] ^ rf_cmd_buf[2])) {
+              extern volatile uint8_t rf_cmd_pending;
+              rf_cmd_pending = rf_cmd_buf[1];
+            }
+            rf_cmd_state = 0;
+            break;
+        }
+      }
+      start = 0;
+    }
+    for (uint32_t i = start; i < end; i++) {
       uint8_t b = rx_buffer_R[i];
       switch (rf_cmd_state) {
-        case 0:  // 等待起始字节 0xAA
-          if (b == 0xAA) { rf_cmd_buf[0] = b; rf_cmd_state = 1; }
-          break;
-        case 1:  // 接收cmd
-          rf_cmd_buf[1] = b; rf_cmd_state = 2;
-          break;
-        case 2:  // 接收reserved
-          rf_cmd_buf[2] = b; rf_cmd_state = 3;
-          break;
-        case 3:  // 接收checksum并校验
+        case 0:  if (b == 0xAA) { rf_cmd_buf[0] = b; rf_cmd_state = 1; } break;
+        case 1:  rf_cmd_buf[1] = b; rf_cmd_state = 2; break;
+        case 2:  rf_cmd_buf[2] = b; rf_cmd_state = 3; break;
+        case 3:
           rf_cmd_buf[3] = b;
           if (b == (rf_cmd_buf[0] ^ rf_cmd_buf[1] ^ rf_cmd_buf[2])) {
             extern volatile uint8_t rf_cmd_pending;
@@ -1248,6 +1256,13 @@ void usart3_rx_check(void)
           break;
       }
     }
+  }
+  #endif
+
+  #if defined(DEBUG_SERIAL_USART3) || defined(CONTROL_SERIAL_USART3) || defined(SIDEBOARD_SERIAL_USART3) || defined(RF_CMD_SERIAL_USART3)
+  old_pos = pos;                                                        // Update old position
+  if (old_pos == rx_buffer_R_len) {                                     // Check and manually update if we reached end of buffer
+    old_pos = 0;
   }
   #endif
 }
